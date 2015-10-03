@@ -211,7 +211,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                         g.drawBitmap(bmp[idx], W/2-40+80*i, H/2-40+80*j);
                     }
                 }
-                g.drawBitmap(bmp[4], W / 2 - 40, H / 2 - 40);
+                g.drawBitmap(bmp[4], W/2-40, H/2-40);
                 drawStatus();
                 g.unlock();
             }
