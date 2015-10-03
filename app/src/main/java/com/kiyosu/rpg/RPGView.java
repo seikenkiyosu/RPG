@@ -100,7 +100,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
         //read bitmap
         for (int i = 0; i < 7; i++) {
-            bmp[i] = readBitmap(activity, "rpg"+1);
+            bmp[i] = readBitmap(activity, "image"+1);
         }
 
         //generate surface folder
@@ -125,6 +125,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     public void surfaceCreated(SurfaceHolder holder) {
         thread = new Thread(this);
         thread.start();
+
     }
 
 
@@ -147,6 +148,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                 scene = init;
                 //start
                 if(scene == S_START) {
+                    scene = S_MAP;
                     yuX = 1;
                     yuY = 2;
                     yuLV = 1;
@@ -403,7 +405,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         g.fillRect((W - 500) / 2, 0, 500, 50);
         g.setColor(Color.rgb(255, 255, 255));
         g.setTextSize(32);
-        g.drawText("勇者 LV" + yuLV + "  HP" + yuHP + "/" + YU_MAXHP, (W - 500) / 2 + 80, 15 - (int) g.getFontMetrics().top);
+        g.drawText("勇者 LV" + yuLV + "  HP" + yuHP + "/" + YU_MAXHP[yuLV], (W - 500) / 2 + 80, 15 - (int) g.getFontMetrics().top);
     }
 
 
