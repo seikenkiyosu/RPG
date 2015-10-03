@@ -285,7 +285,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                     //message
                     drawBattle(EN_NAME[enType] + "を倒した");
                     waitSelect();
-                    drawBattle("勇者は " + EN_EXP[enType] + "経験値を手に入れた");
+                    drawBattle("勇者は " + EN_EXP[enType] + " 経験値を手に入れた");
                     waitSelect();
 
 
@@ -301,7 +301,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                     drawBattle("次のレベルアップまで:  ");
                     waitSelect();
-                    drawBattle((YU_EXP[yuLV]-yuEXP) + ("経験値"));
+                    drawBattle((YU_EXP[yuLV] - yuEXP) + ("経験値"));
                     waitSelect();
 
                     //ending
@@ -371,7 +371,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                 //calculation for escape
                 init = S_MAP;
-                if (enType == 1 || rand(100) <= 10) {
+                if (enType == 1 || rand(100) <= 50 || enType == 2) {
                     drawBattle(EN_NAME[enType]+"は回りこんだ");
                     waitSelect();
                     init = S_DEFENCE;
@@ -412,14 +412,20 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
     //show status
     private void drawStatus() {
-        int color = (yuHP != 0) ? Color.rgb(0, 0, 0) : Color.rgb(255, 0, 0);
-        g.setColor(Color.rgb(255, 255, 255));
-        g.fillRect((W - 504)/2, 8, 504, 54);
+//        int color = (yuHP != 0) ? Color.rgb(0, 0, 0) : Color.rgb(255, 0, 0);    //黒or赤
+        int color = (yuHP != 0) ? Color.rgb(231, 232, 226) : Color.rgb(255, 0, 0);    //シルバーグレーor赤
+//        g.setColor(Color.rgb(255, 255, 255));
+//        g.fillRect((W - 504)/2, 8, 504, 54);
         g.setColor(color);
-        g.fillRect((W - 500)/2, 10, 500, 50);
-        g.setColor(Color.rgb(255, 255, 255));
-        g.setTextSize(32);
-        g.drawText("勇者 LV" + yuLV + "  HP" + yuHP + "/" + YU_MAXHP[yuLV], (W - 500) / 2 + 80, 15 - (int) g.getFontMetrics().top);
+//        g.fillRect((W - 500) / 2, 10, 500, 50);
+        g.fillRect((W - 300) / 2, 10, 300, 30);
+
+//        g.setColor(Color.rgb(255, 255, 255));   //白
+        g.setColor(Color.rgb(0, 0, 0));   //白
+
+//        g.setTextSize(32);
+        g.setTextSize(20);
+        g.drawText("勇者   LV." + yuLV + "   HP." + yuHP + "/" + YU_MAXHP[yuLV], (W - 300) / 2 + 60, 15 - (int) g.getFontMetrics().top);
     }
 
 
