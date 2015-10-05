@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.text.method.Touch;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -42,10 +43,12 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         KEY_DOWN   = 3,
         KEY_1      = 4,
         KEY_2      = 5,
-        KEY_SELECT = 6;
+        KEY_3      = 6,
+        KEY_4      = 7,
+        KEY_SELECT = 8;
 
     //Map constant
-    private final static int MAPkind = 5;
+    private final static int MAPkind = 6;
     private final static int[][] MAP = {
             {3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
             {3, 1, 0, 0, 0, 0, 3, 0, 0, 3},
@@ -100,6 +103,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     //constructor
     public RPGView(Activity activity) {
         super(activity);
+        //read brain parameter
 
         //read bitmap
         for (int i = 0; i < MAPkind; i++) {
@@ -151,14 +155,14 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
             //init scene
             if (init >= 0) {
                 scene = init;
-                //start
+                //start(yuのステータスは死んだときに意味がある)
                 if(scene == S_START) {
                     scene = S_MAP;
                     yuX   = 1;
                     yuY   = 2;
-                    yuLV  = 1;
-                    yuHP  = 30;
-                    yuEXP = 0;
+//                    yuLV  = 1;
+                    yuHP  = YU_MAXHP[yuLV];
+//                    yuEXP = 0;
                 }
                 init = -1;
                 key = KEY_NONE;
@@ -221,7 +225,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                             }
                         }
                         g.drawBitmap(bmpmaps[4], W / 2 - 40, H / 2 - 40);   //マップ上に勇者描画
-                        g.fillRect(W / 2 - 40 + 80 * (-4), H / 2 - 40 + 80 * 1, 160, 160);       //マップ上に十字キー描画
+                        g.drawBitmap(bmpmaps[5], W / 2 - 40 + 80 * (-4), H / 2 - 40 + 80 * 1);       //マップ上に十字キー描画
                         drawStatus();
                         g.unlock();
                     }
@@ -262,11 +266,13 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                 //command
                 case S_COMMAND :
-                    drawBattle("   1.攻撃             2.逃げる");
+                    drawBattle("      攻撃               防御",
+                               "      技   　            逃げる", true);
                     key = KEY_NONE;
                     while (init == -1) {
-                        if (key == KEY_1) init = S_ATTACK;
-                        if (key == KEY_2) init = S_ESCAPE;
+                        if (key == KEY_1 || key == KEY_3) init = S_ATTACK;
+                        else if (key == KEY_2) init = S_DEFENCE;
+                        else if (key == KEY_4) init = S_ESCAPE;
                         sleep(100);
                     }
                     break;
@@ -290,7 +296,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                         //会心の一撃
                         if (rand(100) <= 8) {
-                            drawBattle("会心の一撃!");
+                            drawBattle("急所に当たった!");
                             waitSelect();
                             damage += EN_DEFENCE[enType];
                             damage *= 2;
@@ -323,18 +329,16 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                         while (YU_EXP[yuLV] <= yuEXP) {
                             yuEXP -= YU_EXP[yuLV];
                             yuLV++;
-                            yuHP = YU_MAXHP[yuLV];    //体力回復
+                            yuHP = YU_MAXHP[yuLV] * yuHP/YU_MAXHP[yuLV-1];    //体力回復
                             drawBattle("勇者は LV " + yuLV + " にアップした", false);
                             waitSelect();
                         }
 
-                        drawBattle("次のレベルアップまで:  ", false);
-                        waitSelect();
-                        drawBattle((YU_EXP[yuLV] - yuEXP) + (" 経験値"), false);
+                        drawBattle("次のレベルアップまで  ", ("あと ") + (YU_EXP[yuLV] - yuEXP) + (" 経験値"), false);
                         waitSelect();
 
                         //ending
-                        if (enType == 0) {
+                        if (enType == 0) {  //ボスだったら
                             g.lock();
                             g.setColor(Color.rgb(0, 0, 0));
                             g.fillRect(0, 0, W, H);
@@ -407,7 +411,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                     //calculation for escape
                     init = S_MAP;
-                    if (enType == 0 && rand(100) <= 50 || enType == 1) {
+                    if (enType == 0 || rand(100) <= 50 && enType >= 1) {
                         drawBattle(EN_NAME[enType]+"は回りこんだ");
                         waitSelect();
                         init = S_DEFENCE;
@@ -434,18 +438,39 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         g.fillRect(0, 0, W, H);
         drawStatus();
         if (visible) {
-            g.drawBitmap(bmpmonster[enType], W/2-(bmpmonster[enType].getWidth())/2, H/2-bmpmonster[enType].getHeight() + 80);
+            g.drawBitmap(bmpmonster[enType], W / 2 - (bmpmonster[enType].getWidth()) / 2, H / 2 - bmpmonster[enType].getHeight() + 80);
         }
         g.setColor(Color.rgb(255, 255, 255));
-        g.fillRect((W-504)/2, H-122, 504, 104);
+        g.fillRect((W - 504) / 2, H - 122, 504, 104);
         g.setColor(color);
-        g.fillRect((W-500)/2, H-120, 500, 100);
+        g.fillRect((W - 500) / 2, H - 120, 500, 100);
         g.setColor(Color.rgb(255, 255, 255));
         g.setTextSize(32);
-        g.drawText(message, (W-500)/2+50, 370-(int)g.getFontMetrics().top);
+
+        g.drawText(message, (W - 500) / 2 + 50, 370 - (int) g.getFontMetrics().top);
         g.unlock();
     }
 
+    private void drawBattle(String message1, String message2, boolean visible) {
+        int color = (yuHP != 0) ? Color.rgb(0, 0, 0) : Color.rgb(255, 0, 0);
+        g.lock();
+        g.setColor(color);
+        g.fillRect(0, 0, W, H);
+        drawStatus();
+        if (visible) {
+            g.drawBitmap(bmpmonster[enType], W / 2 - (bmpmonster[enType].getWidth()) / 2, H / 2 - bmpmonster[enType].getHeight() + 80);
+        }
+        g.setColor(Color.rgb(255, 255, 255));
+        g.fillRect((W - 504) / 2, H - 122, 504, 104);
+        g.setColor(color);
+        g.fillRect((W - 500) / 2, H - 120, 500, 100);
+        g.setColor(Color.rgb(255, 255, 255));
+        g.setTextSize(32);
+
+        g.drawText(message1, (W - 500) / 2 + 50, 370 - (int) g.getFontMetrics().top);
+        g.drawText(message2, (W - 500) / 2 + 50, 370 - (int) g.getFontMetrics().top*2 +10);
+        g.unlock();
+    }
 
     //show status
     private void drawStatus() {
@@ -473,22 +498,36 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         int touchAction = event.getAction();
         if(touchAction ==MotionEvent.ACTION_DOWN) {
             if (scene == S_MAP) {
-                if (Math.abs(touchX-(W/2)) > Math.abs(touchY-H/2)) {
-                    key = (touchX-W/2 < 0) ? KEY_LEFT:KEY_RIGHT;
-                }
-                else {
-                    key = (touchY-H/2 < 0) ? KEY_UP:KEY_DOWN;
+//                if (Math.abs(touchX-(W/2)) > Math.abs(touchY-H/2)) {
+//                    key = (touchX-W/2 < 0) ? KEY_LEFT:KEY_RIGHT;
+//                }
+//                else {
+//                    key = (touchY-H/2 < 0) ? KEY_UP:KEY_DOWN;
+//                }
+                //十字キー
+                if (W/2-40+80*(-4) < touchX && touchX < W/2-40+80*(-2) && H/2-40+80 < touchY && touchY < H/2-40+80*3) {
+                    if (Math.abs(touchX - (W / 2 - 40 + 80 * (-3))) > Math.abs(touchY - (H / 2 - 40 + 80 * 2))) {
+                        key = (touchX - (W / 2 - 40 + 80 * (-3)) < 0) ? KEY_LEFT : KEY_RIGHT;
+                    } else {
+                        key = (touchY - (H / 2 - 40 + 80 * 2) < 0) ? KEY_UP : KEY_DOWN;
+                    }
                 }
             }
             else if (scene == S_APPEAR || scene == S_ATTACK || scene == S_DEFENCE || scene == S_ESCAPE) {
                 key = KEY_SELECT;
             }
             else if (scene == S_COMMAND) {
-                if (W/2-250 < touchX && touchX < W/2 && H-190 < touchY && touchY < H) {
+                if (W/2-250 < touchX && touchX < W/2 && H-190 < touchY && touchY < H-70) {
                     key = KEY_1;
                 }
-                else if (W/2 < touchX && touchX < W/2+250 && H-190 < touchY && touchY < H) {
+                else if (W/2 < touchX && touchX < W/2+250 && H-190 < touchY && touchY < H-70) {
                     key = KEY_2;
+                }
+                else if (W/2-250 < touchX && touchX < W/2 && H-70 < touchY && touchY < H) {
+                    key = KEY_3;
+                }
+                else if (W/2 < touchX && touchX < W/2+250 && H-70 < touchY && touchY < H) {
+                    key = KEY_4;
                 }
             }
         }
