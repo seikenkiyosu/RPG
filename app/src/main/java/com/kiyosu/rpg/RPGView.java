@@ -45,6 +45,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         KEY_SELECT = 6;
 
     //Map constant
+    private final static int MAPkind = 5;
     private final static int[][] MAP = {
             {3, 3, 3, 3, 3, 3, 3, 3, 3, 3},
             {3, 1, 0, 0, 0, 0, 3, 0, 0, 3},
@@ -60,19 +61,20 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
     //Brave constant
     private final static int[]
-        YU_MAXHP   = {0,   30,  50,   70, 100},
-        YU_ATTACK  = {0,    5,  10,   30,  35},
-        YU_DEFENCE = {0,    0,   5,   10,  15},
-        YU_EXP     = {0,    1,   1,    3,   6};
+        YU_MAXHP   = {0,  30,  50,   70, 100, 120,  140, 160, 190, 220, 250, 300},
+        YU_ATTACK  = {0,   5,  10,   30,  35,  40,   45,  55,  65,  75, 80,  100},
+        YU_DEFENCE = {0,   0,   5,   10,  15,  20,   25,  30,  35,  40,  45,  50},
+        YU_EXP     = {0,   1,   1,    3,   6,  10,   20,  50, 100, 180, 280, 400};
 
     //enemy constant
+    private final static int MonsterNum = 3;
     private final static String[]
-        EN_NAME = {"いくと", "ティラノサウルス"};
+        EN_NAME = {"大怪獣せいけーん", "マッシュ", "トゲマッシュ"};
     private final static int[]
-        EN_MAXHP   = {10, 50},
-        EN_ATTACK  = {10, 26},
-        EN_DEFENCE = {0, 16},
-        EN_EXP     = {1, 99};
+        EN_MAXHP   = {           50,        10,            20},
+        EN_ATTACK  = {           26,        10,            15},
+        EN_DEFENCE = {           16,         0,             3},
+        EN_EXP     = {           30,         1,             3};
 
     //system
     private SurfaceHolder holder;
@@ -81,7 +83,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     private int           init = S_START;
     private int           scene;
     private int           key;
-    private Bitmap[]      bmp = new Bitmap[7];
+    private Bitmap[]      bmp = new Bitmap[8];
 
     //brain parameter
     private int yuX   = 1;
@@ -99,8 +101,12 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         super(activity);
 
         //read bitmap
-        for (int i = 0; i < 7; i++) {
-            bmp[i] = readBitmap(activity, "image"+i);
+        int j = 0;
+        for (int i = 0; i < MAPkind; i++) {
+            bmp[j++] = readBitmap(activity, "map"+i);
+        }
+        for (int i = 0; i < MonsterNum; i++) {
+            bmp[j++] = readBitmap(activity, "monster"+i);
         }
 
         //generate surface folder
@@ -125,7 +131,6 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     public void surfaceCreated(SurfaceHolder holder) {
         thread = new Thread(this);
         thread.start();
-
     }
 
 
@@ -187,15 +192,23 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                         flag = true;
                     }
                 }
-                //攻撃処理
+                //モンスター出現確率
                 if (flag) {
-                    if (MAP[yuY][yuX]==0 && rand(10)==0) {
-                        enType = 0;
+                    if (MAP[yuY][yuX]==0 && rand(100)<10) {
+                        int r = rand(100);
+                        if(r < 25) {
+                            enType = 2;
+                        }
+                        else {
+                            enType = 1;
+                        }
                         init = S_APPEAR;
                     }
-                    if (MAP[yuY][yuX]==1) yuHP = YU_MAXHP[yuLV];
-                    if (MAP[yuY][yuX]==2) {
-                        enType = 1;
+                    else if (MAP[yuY][yuX]==1) {
+                        yuHP = YU_MAXHP[yuLV];
+                    }
+                    else if (MAP[yuY][yuX]==2) {    //ボス出現
+                        enType = 0;
                         init = S_APPEAR;
                     }
                 }
@@ -222,15 +235,24 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
             else if (scene == S_APPEAR) {
                 //init
                 enHP = EN_MAXHP[enType];
-                //flush
+                //戦闘前のフラッシュ
                 sleep(300);
                 for(int i = 0; i <= 6; i++) {
                     g.lock();
-                    if (i%2 == 0) {
-                        g.setColor(Color.rgb(0, 0, 0));
+                    if(enType >= 1) {
+                        if (i % 2 == 0) {
+                            g.setColor(Color.rgb(0, 0, 0));
+                        } else {
+                            g.setColor(Color.rgb(255, 255, 255));
+                        }
                     }
-                    else {
-                        g.setColor(Color.rgb(255, 255, 255));
+                    //ボスフラッシュ
+                    else if (enType == 0) {
+                        if (i % 2 == 0) {
+                            g.setColor(Color.rgb(140, 140, 140));
+                        } else {
+                            g.setColor(Color.rgb(255, 255, 255));
+                        }
                     }
                     g.fillRect(0, 0, W, H);
                     g.unlock();
@@ -245,7 +267,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
             //command
             else if (scene == S_COMMAND) {
-                drawBattle("   1.攻撃   2.逃げる");
+                drawBattle("   1.攻撃             2.逃げる");
                 key = KEY_NONE;
                 while (init == -1) {
                     if (key == KEY_1) init = S_ATTACK;
@@ -260,52 +282,65 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                 drawBattle("勇者の攻撃");
                 waitSelect();
 
-                //flush
-                for (int i = 0; i < 10; i++) {
-                    drawBattle("勇者の攻撃", i%2==0);
-                    sleep(100);
+                if (rand(100) <= 90) {
+                    //flush
+                    for (int i = 0; i < 10; i++) {
+                        drawBattle("勇者の攻撃", i % 2 == 0);
+                        sleep(100);
+                    }
+
+                    //attack calculation
+                    int damage = YU_ATTACK[yuLV] - EN_DEFENCE[enType] + rand(10);
+                    if (damage <= 1) damage = 1;
+
+                    //会心の一撃
+                    if (rand(100) <= 8) {
+                        drawBattle("会心の一撃!");
+                        waitSelect();
+                        damage += EN_DEFENCE[enType];
+                        damage *= 2;
+                    }
+
+                    //message
+                    drawBattle(damage + "ダメージを与えた");
+                    waitSelect();
+
+                    //calculate HP
+                    enHP -= damage;
+                    if (enHP <= 0) enHP = 0;
                 }
-
-                //attack calculation
-                int damage = YU_ATTACK[yuLV]-EN_DEFENCE[enType]+rand(10);
-                if (damage <= 1) damage = 1;
-                if (damage >= 99) damage = 99;
-
-                //message
-                drawBattle(damage + "ダメージを与えた");
-                waitSelect();
-
-                //calculate HP
-                enHP -= damage;
-                if (enHP <= 0) enHP = 0;
+                else {
+                    drawBattle(EN_NAME[enType] + "は回避した");
+                    waitSelect();
+                }
 
                 //victory
                 init = S_DEFENCE;
                 if (enHP == 0) {
                     //message
-                    drawBattle(EN_NAME[enType] + "を倒した");
+                    drawBattle(EN_NAME[enType] + "を倒した", false);
                     waitSelect();
-                    drawBattle("勇者は " + EN_EXP[enType] + " 経験値を手に入れた");
+                    drawBattle("勇者は " + EN_EXP[enType] + " 経験値を手に入れた", false);
                     waitSelect();
 
 
                     //calculate EXP
                     yuEXP += EN_EXP[enType];
-                    if (YU_EXP[yuLV]<=yuEXP) {
+                    while (YU_EXP[yuLV]<=yuEXP) {
                         yuEXP -= YU_EXP[yuLV];
                         yuLV++;
-                        drawBattle("勇者はレベルアップした");
                         yuHP = YU_MAXHP[yuLV];    //体力回復
+                        drawBattle("勇者は LV " + yuLV + " にアップした", false);
                         waitSelect();
                     }
 
-                    drawBattle("次のレベルアップまで:  ");
+                    drawBattle("次のレベルアップまで:  ", false);
                     waitSelect();
-                    drawBattle((YU_EXP[yuLV] - yuEXP) + ("経験値"));
+                    drawBattle((YU_EXP[yuLV] - yuEXP) + (" 経験値"), false);
                     waitSelect();
 
                     //ending
-                    if (enType == 1) {
+                    if (enType == 0) {
                         g.lock();
                         g.setColor(Color.rgb(0, 0, 0));
                         g.fillRect(0, 0, W, H);
@@ -341,19 +376,31 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
                     sleep(100);
                 }
 
-                //calculate for defence
-                int damage = EN_ATTACK[enType]-YU_DEFENCE[yuLV]+rand(10);
-                if (damage <= 1) damage = 1;
-                if (damage >=99) damage = 99;
+                if (rand(100) <= 90) {
+                    //calculate for defence
+                    int damage = EN_ATTACK[enType] - YU_DEFENCE[yuLV] + rand(10);
+                    if (damage <= 1) damage = 1;
 
-                //message
-                drawBattle(damage + "ダメージを受けた");
-                waitSelect();
+                    //会心の一撃
+                    if (rand(100) <= 8) {
+                        drawBattle("痛恨の一撃!");
+                        waitSelect();
+                        damage += YU_DEFENCE[yuLV];
+                        damage *= 2;
+                    }
 
-                //calculate HP
-                yuHP -= damage;
-                if (yuHP <= 0) yuHP = 0;
+                    //message
+                    drawBattle(damage + "ダメージを受けた");
+                    waitSelect();
 
+                    //calculate HP
+                    yuHP -= damage;
+                    if (yuHP <= 0) yuHP = 0;
+                }
+                else {
+                    drawBattle("勇者は回避した");
+                    waitSelect();
+                }
                 //Lose
                 init = S_COMMAND;
                 if (yuHP == 0) {
@@ -371,7 +418,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
                 //calculation for escape
                 init = S_MAP;
-                if (enType == 1 || rand(100) <= 50 || enType == 2) {
+                if (enType == 0 && rand(100) <= 50 || enType == 1) {
                     drawBattle(EN_NAME[enType]+"は回りこんだ");
                     waitSelect();
                     init = S_DEFENCE;
@@ -391,13 +438,13 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
 
 
     private void drawBattle(String message, boolean visible) {
-        int color = (yuHP != 0) ? Color.rgb(0, 0, 0) : Color.rgb(2555, 0, 0);
+        int color = (yuHP != 0) ? Color.rgb(0, 0, 0) : Color.rgb(255, 0, 0);
         g.lock();
         g.setColor(color);
         g.fillRect(0, 0, W, H);
         drawStatus();
         if (visible) {
-            g.drawBitmap(bmp[5+enType], (W-bmp[5+enType].getWidth())/2, H-100-bmp[5+enType].getHeight());
+            g.drawBitmap(bmp[5+enType], W/2-(bmp[5+enType].getWidth())/2, H/2-bmp[5+enType].getHeight() + 80);
         }
         g.setColor(Color.rgb(255, 255, 255));
         g.fillRect((W-504)/2, H-122, 504, 104);
@@ -432,11 +479,11 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int touchX = (int)(event.getX()*W/getWidth());
-        int touchY = (int)(event.getY()*W/getHeight());
+        int touchY = (int)(event.getY()*H/getHeight());
         int touchAction = event.getAction();
         if(touchAction ==MotionEvent.ACTION_DOWN) {
             if (scene == S_MAP) {
-                if (Math.abs(touchX-W/2) > Math.abs(touchY-H/2)) {
+                if (Math.abs(touchX-(W/2)) > Math.abs(touchY-H/2)) {
                     key = (touchX-W/2 < 0) ? KEY_LEFT:KEY_RIGHT;
                 }
                 else {
@@ -477,7 +524,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     //generates Random number
     private static Random rand = new Random();
     public static int rand(int num) {
-        return (rand.nextInt()>>>1)%num;
+        return (rand.nextInt(num));
     }
 
     private static Bitmap readBitmap(Context context, String name) {
