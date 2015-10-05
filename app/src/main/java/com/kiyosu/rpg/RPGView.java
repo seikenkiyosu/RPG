@@ -83,7 +83,8 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
     private int           init = S_START;
     private int           scene;
     private int           key;
-    private Bitmap[]      bmp = new Bitmap[8];
+    private Bitmap[]      bmpmaps = new Bitmap[MAPkind];
+    private Bitmap[]      bmpmonster = new Bitmap[MonsterNum];
 
     //brain parameter
     private int yuX   = 1;
@@ -101,12 +102,11 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         super(activity);
 
         //read bitmap
-        int j = 0;
         for (int i = 0; i < MAPkind; i++) {
-            bmp[j++] = readBitmap(activity, "map"+i);
+            bmpmaps[i] = readBitmap(activity, "map"+i);
         }
         for (int i = 0; i < MonsterNum; i++) {
-            bmp[j++] = readBitmap(activity, "monster"+i);
+           bmpmonster[i] = readBitmap(activity, "monster"+i);
         }
 
         //generate surface folder
@@ -165,264 +165,254 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
             }
 
             //map
-            if (scene == S_MAP) {
-                //move
-                boolean flag = false;
-                if (key == KEY_UP) {    //勇者の移動
-                    if (MAP[yuY-1][yuX] <= 2) {     //上
-                        yuY--;
-                        flag = true;
-                    }
-                }
-                else if (key == KEY_DOWN) {
-                    if(MAP[yuY+1][yuX] <= 2) {      //下
-                        yuY++;
-                        flag = true;
-                    }
-                }
-                else if (key == KEY_LEFT) {         //左
-                    if(MAP[yuY][yuX-1] <= 2) {
-                        yuX--;
-                        flag = true;
-                    }
-                }
-                else if (key == KEY_RIGHT) {        //右
-                    if(MAP[yuY][yuX+1] <= 2) {
-                        yuX++;
-                        flag = true;
-                    }
-                }
-                //モンスター出現確率
-                if (flag) {
-                    if (MAP[yuY][yuX]==0 && rand(100)<10) {
-                        int r = rand(100);
-                        if(r < 25) {
-                            enType = 2;
+            switch (scene) {
+                case S_MAP:
+                    //move
+                    boolean flag = false;
+                    if (key == KEY_UP) {    //勇者の移動
+                        if (MAP[yuY - 1][yuX] <= 2) {     //上
+                            yuY--;
+                            flag = true;
                         }
-                        else {
-                            enType = 1;
+                    } else if (key == KEY_DOWN) {
+                        if (MAP[yuY + 1][yuX] <= 2) {      //下
+                            yuY++;
+                            flag = true;
                         }
-                        init = S_APPEAR;
+                    } else if (key == KEY_LEFT) {         //左
+                        if (MAP[yuY][yuX - 1] <= 2) {
+                            yuX--;
+                            flag = true;
+                        }
+                    } else if (key == KEY_RIGHT) {        //右
+                        if (MAP[yuY][yuX + 1] <= 2) {
+                            yuX++;
+                            flag = true;
+                        }
                     }
-                    else if (MAP[yuY][yuX]==1) {
-                        yuHP = YU_MAXHP[yuLV];
-                    }
-                    else if (MAP[yuY][yuX]==2) {    //ボス出現
-                        enType = 0;
-                        init = S_APPEAR;
-                    }
-                }
-
-                //for draw
-                if (init != S_APPEAR) {
-                    g.lock();
-                    for (int j = -3; j <= 3; j++) {
-                        for (int i = -5; i <= 5; i++) {
-                            int idx = 3;
-                            if (0 <= yuX + i && yuX + i < MAP[0].length && 0 <= yuY + j && yuY + j < MAP[0].length) {
-                                idx = MAP[yuY + j][yuX + i];
+                    //モンスター出現確率
+                    if (flag) {
+                        if (MAP[yuY][yuX] == 0 && rand(100) < 10) {
+                            int r = rand(100);
+                            if (r < 25) {
+                                enType = 2;
+                            } else {
+                                enType = 1;
                             }
-                            g.drawBitmap(bmp[idx], W/2-40+80*i, H/2-40+80*j);   //マップフィールド描画
+                            init = S_APPEAR;
+                        } else if (MAP[yuY][yuX] == 1) {
+                            yuHP = YU_MAXHP[yuLV];
+                        } else if (MAP[yuY][yuX] == 2) {    //ボス出現
+                            enType = 0;
+                            init = S_APPEAR;
                         }
                     }
-                    g.drawBitmap(bmp[4], W/2-40, H/2-40);   //マップ上に勇者描画
-                    drawStatus();
-                    g.unlock();
-                }
-            }
 
-            //appear process
-            else if (scene == S_APPEAR) {
-                //init
-                enHP = EN_MAXHP[enType];
-                //戦闘前のフラッシュ
-                sleep(300);
-                for(int i = 0; i <= 6; i++) {
-                    g.lock();
-                    if(enType >= 1) {
-                        if (i % 2 == 0) {
-                            g.setColor(Color.rgb(0, 0, 0));
-                        } else {
-                            g.setColor(Color.rgb(255, 255, 255));
+                    //for draw
+                    if (init != S_APPEAR) {
+                        g.lock();
+                        for (int j = -3; j <= 3; j++) {
+                            for (int i = -5; i <= 5; i++) {
+                                int idx = 3;
+                                if (0 <= yuX + i && yuX + i < MAP[0].length && 0 <= yuY + j && yuY + j < MAP[0].length) {
+                                    idx = MAP[yuY + j][yuX + i];
+                                }
+                                g.drawBitmap(bmpmaps[idx], W / 2 - 40 + 80 * i, H / 2 - 40 + 80 * j);   //マップフィールド描画
+                            }
                         }
+                        g.drawBitmap(bmpmaps[4], W / 2 - 40, H / 2 - 40);   //マップ上に勇者描画
+                        g.fillRect(W / 2 - 40 + 80 * (-4), H / 2 - 40 + 80 * 1, 160, 160);       //マップ上に十字キー描画
+                        drawStatus();
+                        g.unlock();
                     }
-                    //ボスフラッシュ
-                    else if (enType == 0) {
-                        if (i % 2 == 0) {
-                            g.setColor(Color.rgb(140, 140, 140));
-                        } else {
-                            g.setColor(Color.rgb(255, 255, 255));
+                    break;
+                //appear process
+                case S_APPEAR:
+                    //init
+                    enHP = EN_MAXHP[enType];
+                    //戦闘前のフラッシュ
+                    sleep(300);
+                    for (int i = 0; i <= 6; i++) {
+                        g.lock();
+                        if (enType >= 1) {
+                            if (i % 2 == 0) {
+                                g.setColor(Color.rgb(0, 0, 0));
+                            } else {
+                                g.setColor(Color.rgb(255, 255, 255));
+                            }
                         }
-                    }
-                    g.fillRect(0, 0, W, H);
-                    g.unlock();
-                    sleep(100);
-                }
-
-                //message
-                drawBattle(EN_NAME[enType] + "が現れた");
-                waitSelect();
-                init = S_COMMAND;
-            }
-
-            //command
-            else if (scene == S_COMMAND) {
-                drawBattle("   1.攻撃             2.逃げる");
-                key = KEY_NONE;
-                while (init == -1) {
-                    if (key == KEY_1) init = S_ATTACK;
-                    if (key == KEY_2) init = S_ESCAPE;
-                    sleep(100);
-                }
-            }
-
-            //attack process
-            else if (scene == S_ATTACK) {
-                //message
-                drawBattle("勇者の攻撃");
-                waitSelect();
-
-                if (rand(100) <= 90) {
-                    //flush
-                    for (int i = 0; i < 10; i++) {
-                        drawBattle("勇者の攻撃", i % 2 == 0);
+                        //ボスフラッシュ
+                        else if (enType == 0) {
+                            if (i % 2 == 0) {
+                                g.setColor(Color.rgb(140, 140, 140));
+                            } else {
+                                g.setColor(Color.rgb(255, 255, 255));
+                            }
+                        }
+                        g.fillRect(0, 0, W, H);
+                        g.unlock();
                         sleep(100);
                     }
 
-                    //attack calculation
-                    int damage = YU_ATTACK[yuLV] - EN_DEFENCE[enType] + rand(10);
-                    if (damage <= 1) damage = 1;
+                    //message
+                    drawBattle(EN_NAME[enType] + "が現れた");
+                    waitSelect();
+                    init = S_COMMAND;
+                    break;
 
-                    //会心の一撃
-                    if (rand(100) <= 8) {
-                        drawBattle("会心の一撃!");
+                //command
+                case S_COMMAND :
+                    drawBattle("   1.攻撃             2.逃げる");
+                    key = KEY_NONE;
+                    while (init == -1) {
+                        if (key == KEY_1) init = S_ATTACK;
+                        if (key == KEY_2) init = S_ESCAPE;
+                        sleep(100);
+                    }
+                    break;
+
+                //attack process
+                case S_ATTACK:
+                    //message
+                    drawBattle("勇者の攻撃");
+                    waitSelect();
+
+                    if (rand(100) <= 90) {
+                        //flush
+                        for (int i = 0; i < 10; i++) {
+                            drawBattle("勇者の攻撃", i % 2 == 0);
+                            sleep(100);
+                        }
+
+                        //attack calculation
+                        int damage = YU_ATTACK[yuLV] - EN_DEFENCE[enType] + rand(10);
+                        if (damage <= 1) damage = 1;
+
+                        //会心の一撃
+                        if (rand(100) <= 8) {
+                            drawBattle("会心の一撃!");
+                            waitSelect();
+                            damage += EN_DEFENCE[enType];
+                            damage *= 2;
+                        }
+
+                        //message
+                        drawBattle(damage + "ダメージを与えた");
                         waitSelect();
-                        damage += EN_DEFENCE[enType];
-                        damage *= 2;
+
+                        //calculate HP
+                        enHP -= damage;
+                        if (enHP <= 0) enHP = 0;
+                    } else {
+                        drawBattle(EN_NAME[enType] + "は回避した");
+                        waitSelect();
                     }
 
+                    //victory
+                    init = S_DEFENCE;
+                    if (enHP == 0) {
+                        //message
+                        drawBattle(EN_NAME[enType] + "を倒した", false);
+                        waitSelect();
+                        drawBattle("勇者は " + EN_EXP[enType] + " 経験値を手に入れた", false);
+                        waitSelect();
+
+
+                        //calculate EXP
+                        yuEXP += EN_EXP[enType];
+                        while (YU_EXP[yuLV] <= yuEXP) {
+                            yuEXP -= YU_EXP[yuLV];
+                            yuLV++;
+                            yuHP = YU_MAXHP[yuLV];    //体力回復
+                            drawBattle("勇者は LV " + yuLV + " にアップした", false);
+                            waitSelect();
+                        }
+
+                        drawBattle("次のレベルアップまで:  ", false);
+                        waitSelect();
+                        drawBattle((YU_EXP[yuLV] - yuEXP) + (" 経験値"), false);
+                        waitSelect();
+
+                        //ending
+                        if (enType == 0) {
+                            g.lock();
+                            g.setColor(Color.rgb(0, 0, 0));
+                            g.fillRect(0, 0, W, H);
+                            g.setColor(Color.rgb(255, 255, 255));
+                            g.setTextSize(32);
+                            String str = "Fin.";
+                            g.drawText(str, (W - g.measureText(str)) / 2, 180 - (int) g.getFontMetrics().top);
+                            g.unlock();
+                            waitSelect();
+                            init = S_START;
+                        }
+                        init = S_MAP;
+                    }
+                    break;
+
+                //defence calculation
+                case S_DEFENCE:
                     //message
-                    drawBattle(damage + "ダメージを与えた");
+                    drawBattle(EN_NAME[enType] + "の攻撃");
                     waitSelect();
+                    if (rand(100) <= 90) {
+                        //flush
+                        for (int i = 0; i < 10; i++) {
+                            if (i % 2 == 0) {
+                                g.lock();
+                                g.setColor(Color.rgb(255, 255, 255));
+                                g.fillRect(0, 0, W, H);
+                                g.unlock();
+                            } else {
+                                drawBattle(EN_NAME[enType] + "の攻撃");
+                            }
+                            sleep(100);
+                        }
+                        //calculate for defence
+                        int damage = EN_ATTACK[enType] - YU_DEFENCE[yuLV] + rand(10);
+                        if (damage <= 1) damage = 1;
 
-                    //calculate HP
-                    enHP -= damage;
-                    if (enHP <= 0) enHP = 0;
-                }
-                else {
-                    drawBattle(EN_NAME[enType] + "は回避した");
-                    waitSelect();
-                }
+                        //会心の一撃
+                        if (rand(100) <= 8) {
+                            drawBattle("痛恨の一撃!");
+                            waitSelect();
+                            damage += YU_DEFENCE[yuLV];
+                            damage *= 2;
+                        }
 
-                //victory
-                init = S_DEFENCE;
-                if (enHP == 0) {
-                    //message
-                    drawBattle(EN_NAME[enType] + "を倒した", false);
-                    waitSelect();
-                    drawBattle("勇者は " + EN_EXP[enType] + " 経験値を手に入れた", false);
-                    waitSelect();
+                        //message
+                        drawBattle(damage + "ダメージを受けた");
+                        waitSelect();
 
-
-                    //calculate EXP
-                    yuEXP += EN_EXP[enType];
-                    while (YU_EXP[yuLV]<=yuEXP) {
-                        yuEXP -= YU_EXP[yuLV];
-                        yuLV++;
-                        yuHP = YU_MAXHP[yuLV];    //体力回復
-                        drawBattle("勇者は LV " + yuLV + " にアップした", false);
+                        //calculate HP
+                        yuHP -= damage;
+                        if (yuHP <= 0) yuHP = 0;
+                    } else {
+                        drawBattle("勇者は回避した");
                         waitSelect();
                     }
-
-                    drawBattle("次のレベルアップまで:  ", false);
-                    waitSelect();
-                    drawBattle((YU_EXP[yuLV] - yuEXP) + (" 経験値"), false);
-                    waitSelect();
-
-                    //ending
-                    if (enType == 0) {
-                        g.lock();
-                        g.setColor(Color.rgb(0, 0, 0));
-                        g.fillRect(0, 0, W, H);
-                        g.setColor(Color.rgb(255, 255, 255));
-                        g.setTextSize(32);
-                        String str = "Fin.";
-                        g.drawText(str, (W-g.measureText(str))/2, 180-(int)g.getFontMetrics().top);
-                        g.unlock();
+                    //Lose
+                    init = S_COMMAND;
+                    if (yuHP == 0) {
+                        drawBattle("勇者は力尽きた");
                         waitSelect();
                         init = S_START;
                     }
-                    init = S_MAP;
-                }
-            }
-
-            //defence calculation
-            else if (scene == S_DEFENCE) {
-                //message
-                drawBattle(EN_NAME[enType] + "の攻撃");
-                waitSelect();
-
-                //flush
-                for (int i = 0; i < 10; i++) {
-                    if (i%2 ==0) {
-                        g.lock();
-                        g.setColor(Color.rgb(255, 255, 255));
-                        g.fillRect(0, 0, W, H);
-                        g.unlock();
-                    }
-                    else {
-                        drawBattle(EN_NAME[enType] + "の攻撃");
-                    }
-                    sleep(100);
-                }
-
-                if (rand(100) <= 90) {
-                    //calculate for defence
-                    int damage = EN_ATTACK[enType] - YU_DEFENCE[yuLV] + rand(10);
-                    if (damage <= 1) damage = 1;
-
-                    //会心の一撃
-                    if (rand(100) <= 8) {
-                        drawBattle("痛恨の一撃!");
-                        waitSelect();
-                        damage += YU_DEFENCE[yuLV];
-                        damage *= 2;
-                    }
-
+                    break;
+               //escape
+                case S_ESCAPE :
                     //message
-                    drawBattle(damage + "ダメージを受けた");
+                    drawBattle("勇者は逃げ出した");
                     waitSelect();
 
-                    //calculate HP
-                    yuHP -= damage;
-                    if (yuHP <= 0) yuHP = 0;
-                }
-                else {
-                    drawBattle("勇者は回避した");
-                    waitSelect();
-                }
-                //Lose
-                init = S_COMMAND;
-                if (yuHP == 0) {
-                    drawBattle("勇者は力尽きた");
-                    waitSelect();
-                    init = S_START;
-                }
-            }
-
-            //escape
-            else if (scene == S_ESCAPE) {
-                //message
-                drawBattle("勇者は逃げ出した");
-                waitSelect();
-
-                //calculation for escape
-                init = S_MAP;
-                if (enType == 0 && rand(100) <= 50 || enType == 1) {
-                    drawBattle(EN_NAME[enType]+"は回りこんだ");
-                    waitSelect();
-                    init = S_DEFENCE;
-                }
+                    //calculation for escape
+                    init = S_MAP;
+                    if (enType == 0 && rand(100) <= 50 || enType == 1) {
+                        drawBattle(EN_NAME[enType]+"は回りこんだ");
+                        waitSelect();
+                        init = S_DEFENCE;
+                    }
+                    break;
             }
 
             //sleep
@@ -444,7 +434,7 @@ public class RPGView extends SurfaceView implements SurfaceHolder.Callback, Runn
         g.fillRect(0, 0, W, H);
         drawStatus();
         if (visible) {
-            g.drawBitmap(bmp[5+enType], W/2-(bmp[5+enType].getWidth())/2, H/2-bmp[5+enType].getHeight() + 80);
+            g.drawBitmap(bmpmonster[enType], W/2-(bmpmonster[enType].getWidth())/2, H/2-bmpmonster[enType].getHeight() + 80);
         }
         g.setColor(Color.rgb(255, 255, 255));
         g.fillRect((W-504)/2, H-122, 504, 104);
