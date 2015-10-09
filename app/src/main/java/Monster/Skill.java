@@ -1,44 +1,130 @@
 package Monster;
 
+import com.kiyosu.rpg.RPGView;
+
 public class Skill {
-    private int skillnumber;    //スキルナンバー
-    private String name;    //スキルの名前
+    //スキル名
+    public static String NAME[] = {
+            "",
+            "アンパンチ",
+            "アンキック",
+            "キック",
+            "アンドライブ"
+    };
 
-    public Skill(int num) {
-        skillnumber = num;
-        switch (num) {
-            case 1: name = "アンパンチ"; break;
-            case 2: name = "アンチョップ"; break;
-            case 3: name = "アンドライブ"; break;
-            case 4: name = "アンキック"; break;
-        }
-    }
-    public void cast() {
+    //スキル発動
+    public static void Skillcast(RPGView rpg, int skillnumber, Monster attacker, Monster defender) {
         switch (skillnumber) {
-            case 1: Anpanch(); break;
-            case 2: Anchop(); break;
-            case 3: Andrive(); break;
-            case 4: Ankick(); break;
+            case 1:
+                Anpanch(rpg, attacker, defender);
+                break;
+            case 2:
+                Anchop(rpg, attacker, defender);
+                break;
+            case 3:
+                Kick(rpg, attacker, defender);
+                break;
+            case 4:
+                Ankick(rpg, attacker, defender);
+                break;
+            default:
         }
     }
-    private int Anpanch() {
-        int damage = 20;
 
-        return damage;
+    /*スキル番号ごとにスキル定義*/
+    //1
+    private static void Anpanch(RPGView rpg, Monster attacker, Monster defender) {
+        int sp = 1;
+        if (attacker.SP - sp >= 0) {   //SPが足りたら
+            //スキル消費
+            attacker.SP -= sp;
+            //エフェクト
+            for (int i = 0; i < 20; i++) {
+                rpg.drawBattle(attacker.NAME + "のアンパンチ", i % 2 == 0);
+                rpg.sleep(50);
+            }
+            //効果
+            int damage = 10;
+            rpg.drawBattle(defender.NAME + "に" + damage + "ダメージ!");
+            rpg.waitSelect();
+            defender.HP -= damage;
+            if (defender.HP <= 0) defender.HP = 0;
+
+        } else {  //SPが足りない場合
+            rpg.drawBattle("SPが足りない!");
+            rpg.waitSelect();
+        }
     }
-    private int Anchop() {
-        int damage = 30;
 
-        return damage;
+    //2
+    private static void Anchop(RPGView rpg, Monster attacker, Monster defender) {
+        int sp = 1;
+        if (attacker.SP - sp >= 0) {   //SPが足りたら
+            //スキル消費
+            attacker.SP -= sp;
+            //エフェクト
+            for (int i = 0; i < 20; i++) {
+                rpg.drawBattle(attacker.NAME + "のアンチョップ" , i % 2 == 0);
+                rpg.sleep(50);
+            }
+            //効果
+            int damage = 20;
+            rpg.drawBattle(defender.NAME + "に" + damage + "ダメージ!");
+            rpg.waitSelect();
+            defender.HP -= damage;
+            if (defender.HP <= 0) defender.HP = 0;
+
+        } else {  //SPが足りない場合
+            rpg.drawBattle("SPが足りない!");
+            rpg.waitSelect();
+        }
     }
-    private int Andrive() {
-        int damage = 40;
 
-        return damage;
+    //3
+    private static void Kick(RPGView rpg, Monster attacker, Monster defender) {
+        int sp = 4;
+        if (attacker.SP - sp >= 0) {   //SPが足りたら
+            //スキル消費
+            attacker.SP -= sp;
+            //エフェクト
+            for (int i = 0; i < 20; i++) {
+                rpg.drawBattle(attacker.NAME + "のキック!", i % 2 == 0);
+                rpg.sleep(50);
+            }
+            //効果
+            int damage = 30;
+            rpg.drawBattle(defender.NAME + "に" + damage + "ダメージ!");
+            rpg.waitSelect();
+            defender.HP -= damage;
+            if (defender.HP <= 0) defender.HP = 0;
+
+        } else {  //SPが足りない場合
+            rpg.drawBattle("SPが足りない!");
+            rpg.waitSelect();
+        }
     }
-    private int Ankick() {
-        int damage = 50;
 
-        return damage;
+    //4
+    private static void Ankick(RPGView rpg, Monster attacker, Monster defender) {
+        int sp = 4;
+        if (attacker.SP - sp >= 0) {   //SPが足りたら
+            //スキル消費
+            attacker.SP -= sp;
+            //エフェクト
+            for (int i = 0; i < 20; i++) {
+                rpg.drawBattle(attacker.NAME + "のアンキック!", i % 2 == 0);
+                rpg.sleep(50);
+            }
+            //効果
+            int damage = 40;
+            rpg.drawBattle(defender.NAME + "に" + damage + "ダメージを与えた");
+            rpg.waitSelect();
+            defender.HP -= damage;
+            if (defender.HP <= 0) defender.HP = 0;
+
+        } else {  //SPが足りない場合
+            rpg.drawBattle("SPが足りない!");
+            rpg.waitSelect();
+        }
     }
 }

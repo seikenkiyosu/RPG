@@ -76,8 +76,15 @@ public class Graphics {
         int h = bitmap.getHeight();
         Rect src = new Rect(0, 0, w, h);
         Rect dst = new Rect(x, y, x+w, y+h);
-//        Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-//        Rect dst = new Rect(x, y, x+80, y+80);
+        canvas.drawBitmap(bitmap, src, dst, null);
+    }
+
+    public void drawMonsterInMap(Bitmap bitmap, int x, int y) {
+        if (canvas == null) return;
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+        Rect src = new Rect(0, 0, w, h);
+        Rect dst = new Rect(x, y, x+w/3, y+h/3);
         canvas.drawBitmap(bitmap, src, dst, null);
     }
 

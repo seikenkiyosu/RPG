@@ -12,6 +12,7 @@ public class RPG extends Activity {
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(new RPGView(this));
+        RPGView rpgView = new RPGView(this);
+        setContentView(rpgView);
     }
 }
